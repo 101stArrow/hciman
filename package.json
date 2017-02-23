@@ -1,0 +1,17 @@
+{
+  "name": "hciman",
+  "version": "1.0.0",
+  "description": "A Multiplayer Pacman Game built for a HCI assignment",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Eric Muir",
+  "license": "MIT",
+  "dependencies": {
+    "ejs": "^2.5.6",
+    "express": "^4.14.1",
+    "lowdb": "^0.15.5",
+    "socket.io": "^1.7.3"
+  }
+}
