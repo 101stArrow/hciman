@@ -1,0 +1,143 @@
+<html>
+	<head>
+		<title>HCI-Man</title>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+		<link rel="stylesheet" href="/css/animate.css" />
+		<style>
+			canvas {
+				height: 100%;
+				width: 100%;
+			}
+			body {
+				margin: 0;
+			}
+		</style>
+	</head>
+	<body>
+		
+		<canvas id="canvas" style="display:none;"></canvas>
+		<%- include partials/scripts.ejs %>
+		<script>
+			$( document ).ready(function() {
+				init()
+			});
+			var socket;
+			socket = io.connect('http://'+location.hostname+':'+location.port);
+
+			var canvas, ctx, frame, time = 20, gameClock, paused = false;
+			var bsize, bwidth, bheight, map = [], fruit = {};
+			var players = []
+
+			var blockColor = "#BBAAFF";
+			var fruitColor = "#2F2A40";
+
+			function init(){
+				username = $('#username').val()
+
+				$('#intro').hide()
+				$('#end').hide()
+				$('#canvas').show()
+
+				canvas = document.getElementById("canvas");
+
+				canvas.width = document.body.clientWidth;
+				canvas.height = document.body.clientHeight;
+				bsize = canvas.width / 100
+				frame = 0;
+				score = 0;
+
+				bwidth = Math.ceil(canvas.width/bsize);
+				bheight = Math.ceil(canvas.height/bsize);
+
+				if( canvas.getContext ){
+						ctx = canvas.getContext('2d');
+						gameClock = setInterval(update, time);
+				} else {
+					alert("Your browser doesn't support HTML5 canvas. please use another browser")
+				}
+
+				socket.emit('startgame', {height: bheight, width: bwidth})
+			}
+
+			function update(){
+				frame++
+				ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+				var cc = 0;
+				for(h=0;h<bheight;h++){
+					for(w=0;w<bwidth;w++){
+						cc++
+						height = h*bsize
+						width = w*bsize
+
+						ctx.fillStyle = "rgb(0, 0, 0)";
+						ctx.fillRect (width, height, bsize, bsize);
+
+						if(w == 0 || w == bwidth-1 || h == 0 || h == bheight-1){
+							ctx.fillStyle = blockColor;
+							ctx.fillRect (width, height, bsize, bsize);
+						}
+
+						if(map[w*h] == true){
+							ctx.fillStyle = blockColor;
+							ctx.fillRect (width, height, bsize, bsize);
+						}
+
+						if(map[w*h] == "fruit"){
+							ctx.fillStyle = fruitColor;
+							ctx.fillRect (width, height, bsize, bsize);
+						}
+
+						ctx.strokeStyle = 'rgb(160,160,160)';
+						ctx.strokeRect (width, height, bsize, bsize);
+					}
+				}
+
+				// player adding loop
+				for(i=0; i<players.length; i++){
+					player = players[i]
+					ctx.fillStyle = player.color;
+					ctx.fillRect (player.x*bsize, player.y*bsize, bsize, bsize);
+				}
+
+				// ctx.fillText("Score: "+score, 20, 15)
+
+				if(frame%30==0){
+					// console.log(frame/30)
+				}
+			}
+
+			function gameOver(reason){
+				console.log("Death by: "+reason)
+				clearInterval(gameClock)
+				ctx.clearRect(0, 0, canvas.width, canvas.height)
+				$('#end').addClass('animated fadeInDownBig');
+				$('#end').show()
+				$('#canvas').hide()
+				$('#score').html(score)
+				$('#reason').html(reason)
+				socket.emit('death',{
+					username: username,
+					score: score,
+					time: Date.now()
+				})
+			}
+
+			socket.on('news', function (data) {
+				$.notify({
+					title: data.title,
+					message: " - "+data.body
+				},{
+					type: 'info'
+				})
+			});
+
+			socket.on('game', function (data) {
+				players = data.players || []
+				map = data.map
+				id = data.gameid
+			});
+		</script>
+
+	</body>
+</html>
