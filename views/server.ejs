@@ -28,6 +28,7 @@
 			var bsize, bwidth, bheight, map = [], fruit = {};
 			var players = []
 
+			var backColor = "#000000";
 			var blockColor = "#BBAAFF";
 			var fruitColor = "#2F2A40";
 
@@ -56,52 +57,43 @@
 					alert("Your browser doesn't support HTML5 canvas. please use another browser")
 				}
 
-				socket.emit('startgame', {height: bheight, width: bwidth})
+				socket.emit('startgame', {height: bheight, width: bwidth, size: bsize})
 			}
 
 			function update(){
 				frame++
 				ctx.clearRect(0, 0, canvas.width, canvas.height)
-
 				var cc = 0;
 				for(h=0;h<bheight;h++){
 					for(w=0;w<bwidth;w++){
 						cc++
 						height = h*bsize
 						width = w*bsize
-
 						ctx.fillStyle = "rgb(0, 0, 0)";
 						ctx.fillRect (width, height, bsize, bsize);
-
 						if(w == 0 || w == bwidth-1 || h == 0 || h == bheight-1){
 							ctx.fillStyle = blockColor;
 							ctx.fillRect (width, height, bsize, bsize);
 						}
-
-						if(map[w*h] == true){
+						if(map[w*h] == "wall"){
 							ctx.fillStyle = blockColor;
 							ctx.fillRect (width, height, bsize, bsize);
 						}
-
-						if(map[w*h] == "fruit"){
+						if(map[w*h] == "ammo"){
 							ctx.fillStyle = fruitColor;
 							ctx.fillRect (width, height, bsize, bsize);
 						}
-
 						ctx.strokeStyle = 'rgb(160,160,160)';
 						ctx.strokeRect (width, height, bsize, bsize);
 					}
 				}
-
 				// player adding loop
 				for(i=0; i<players.length; i++){
 					player = players[i]
 					ctx.fillStyle = player.color;
 					ctx.fillRect (player.x*bsize, player.y*bsize, bsize, bsize);
 				}
-
 				// ctx.fillText("Score: "+score, 20, 15)
-
 				if(frame%30==0){
 					// console.log(frame/30)
 				}

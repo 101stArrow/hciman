@@ -51,6 +51,7 @@ io.on('connection', function (socket) {
 			map: genMap(data.height, data.width),
 			height: data.height,
 			width: data.width,
+			size: data.size,
 			gameid: makeid(5),
 			server: socket.id
 		}
@@ -74,7 +75,8 @@ io.on('connection', function (socket) {
 				username: data.user,
 				color: rc.randomColor({ luminosity: 'light', format: 'rgb' }),
 				x: Math.floor(Math.random()*gameObj.width),
-				y: Math.floor(Math.random()*gameObj.height)
+				y: Math.floor(Math.random()*gameObj.height),
+				ammo: 0
 			})
 			db.get('ingame').find({gameid: data.server}).assign(gameObj).write();
 			// emit("game", gameObj);
@@ -89,21 +91,46 @@ io.on('connection', function (socket) {
 		gameObj.players.forEach(function(e){
 			if(e.username == data.player){
 				//Found user
-				console.log(data.action)
 				console.log(e)
+				px = Math.floor(e.x * gameObj.size)
+				py = Math.floor(e.y * gameObj.size)
 				switch (data.action){
 					case 'up':
-						e.y += -1
+						if(gameObj.map[e.x * e.y-1] == "wall"){
+							break;
+						} else {
+							e.y += -1
+							break;
+						}
 						break;
 					case 'right':
-						e.x += 1
+						if(gameObj.map[e.x+1 * e.y] == "wall"){
+							break;
+						} else {
+							e.x += 1
+							break;
+						}
 						break;
 					case 'down':
-						e.y += 1
+						if(gameObj.map[e.x * e.y+1] == "wall"){
+							break;
+						} else {
+							e.y += 1
+							break;
+						}
 						break;
 					case 'left':
-						e.x += -1
+						if(gameObj.map[e.x-1 * e.y] == "wall"){
+							break;
+						} else {
+							e.x += -1
+							break; 
+						}
 						break;
+				}
+				if(gameObj.map[e.x * e.y] == "ammo"){
+					e.ammo++
+					gameObj.map[e.x * e.y] = false
 				}
 			}
 		});
@@ -131,9 +158,9 @@ function genMap(height, width) {
 		for (w = 0; w < width - 1; w++) {
 			chance = Math.random()
 			if (chance > 0.97) {
-				map.push("fruit")
+				map.push("ammo")
 			} else if (chance > 0.85) {
-				map.push(true)
+				map.push("wall")
 			} else {
 				map.push(false)
 			}
